@@ -2,18 +2,27 @@
 
 window.CONTENT_SCRIPT_TOOLS = (function(){
 
-    var _url_matches = {},
+    var _url_matches = [],
         _tab_load_callbacks = [];
 
+    //setup a list of scripts/stylesheets that should be loaded when a tab is opened/loaded @ a matching URL pattern
+    //NOTE match_pattern can be a string, regex or array of strings/regexes
     function _register_content_resources_for_url_pattern( match_pattern, scripts, stylesheets, cb ){
         if(typeof(match_pattern) !== 'object') match_pattern = [match_pattern];
+        function escapeRegExp(string){
+            return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
+
         for(var i=0; i<match_pattern.length; i++) {
             var patt = match_pattern[i];
-            if (!(patt in _url_matches)) _url_matches[patt] = [];
-            _url_matches[patt].push({
+            if(!(patt instanceof RegExp)) {
+                patt = new RegExp( escapeRegExp(patt), 'i' );
+            }
+            _url_matches.push({
                 scripts: scripts,
                 stylesheets: stylesheets,
-                cb: cb
+                cb: cb,
+                match: patt
             });
         }
     }
@@ -27,9 +36,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
 
         function _script_loaded(){
             _needed_scripts--;
-            if(_needed_scripts==0){ //all scripts are loaded
-                cb( tab );
-            }
+            if(_needed_scripts==0) cb( tab ); //all scrips are loaded
         }
         for(var i=0; i<content_scripts.length; i++){
             chrome.tabs.executeScript( tab.id, {
@@ -57,17 +64,11 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
             _tab_load_callbacks[i](tab);
         }
         if(tab.url){
-            for(var pattern in _url_matches){
-                if(tab.url.indexOf(pattern) != -1){
-                    console.log("MATCH!"); console.log(pattern);
-                    //url matched!
-                    for(var j=0; j<_url_matches[pattern].length; j++){
-
-                        //load CSS first
-                        _load_content_stylesheets_in_tab( _url_matches[pattern][j].stylesheets, tab.id );
-                        _load_content_scripts_in_tab( _url_matches[pattern][j].scripts, tab, _url_matches[pattern][j].cb );
-                    }
-                }
+            for(var i=0; i<_url_matches.length; i++){
+                if(!_url_matches[i].match.test( tab.url )) continue;
+                //load CSS first
+                _load_content_stylesheets_in_tab( _url_matches[i].stylesheets, tab.id );
+                _load_content_scripts_in_tab( _url_matches[i].scripts, tab, _url_matches[i].cb );
             }
         }
     }
