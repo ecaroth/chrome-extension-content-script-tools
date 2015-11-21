@@ -2,27 +2,30 @@
 
 window.CONTENT_SCRIPT_TOOLS = (function(){
 
-    var _url_matches = [],
-        _tab_load_callbacks = [];
+    var _tab_state = {},
+        _url_matches = [],
+        _tab_change_callbacks = [];
 
     //setup a list of scripts/stylesheets that should be loaded when a tab is opened/loaded @ a matching URL pattern
-    //NOTE match_pattern can be a string, regex or array of strings/regexes
-    function _register_content_resources_for_url_pattern( match_pattern, scripts, stylesheets, cb ){
-        if(typeof(match_pattern) !== 'object') match_pattern = [match_pattern];
+    //NOTE matches can be a string, regex, function that returns true/false (w/ tab passed in) or array of strings/regexes/functions
+    function _register_content_resources_for_tab_urls( matches, scripts, stylesheets, cb ){
+        var match_id = (new Date().getTime())+':'+(Math.floor(Math.random()*(999999-100000+1)+10000)); //id for match pattern group to prevent multiple loading for multi-matches
+        if(typeof(matches) !== 'object') matches = [matches];
         function escapeRegExp(string){
             return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         }
 
-        for(var i=0; i<match_pattern.length; i++) {
-            var patt = match_pattern[i];
-            if(!(patt instanceof RegExp)) {
-                patt = new RegExp( escapeRegExp(patt), 'i' );
+        for(var i=0; i<matches.length; i++) {
+            var match = matches[i];
+            if(!(match instanceof RegExp) && typeof(match) != 'function') {
+                match = new RegExp( escapeRegExp(match), 'i' );
             }
             _url_matches.push({
                 scripts: scripts,
                 stylesheets: stylesheets,
                 cb: cb,
-                match: patt
+                match: match,
+                match_id: match_id
             });
         }
     }
@@ -36,7 +39,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
 
         function _script_loaded(){
             _needed_scripts--;
-            if(_needed_scripts==0) cb( tab ); //all scrips are loaded
+            if(_needed_scripts==0 && typeof(cb)=='function') cb( tab ); //all scrips are loaded
         }
         for(var i=0; i<content_scripts.length; i++){
             chrome.tabs.executeScript( tab.id, {
@@ -59,14 +62,49 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
     }
 
     //function called any time a tab is fundamentally changed (URL changed, new tab, reloaded)
-    function _tab_changed(tab){
-        for(var i=0; i<_tab_load_callbacks.length; i++){
-            _tab_load_callbacks[i](tab);
+    function _tab_changed(tab, closing){
+        //determine the type of tab change (load, reload, hash_change, close)
+        //NOTE - if closing==true, then tab is just tab.id NOT the whole tab object
+        var tab_id = closing ? tab : tab.id;
+        var type = 'load';
+        if(closing){
+            type = 'close';
+            delete _tab_state[tab_id];
+        }else if(!closing && !(tab_id in _tab_state)){
+            type = 'load';
+        }else if(tab_id in _tab_state){
+            if(tab_id == _tab_state[tab_id]){
+                type = 'reload';
+            }else{
+                 var orig_url_parts = _tab_state[tab_id].split("#"),
+                    new_url_parts = tab.url.split("#");
+                if(orig_url_parts[0]==new_url_parts[0]){
+                    //same base url
+                    if(orig_url_parts.length != new_url_parts.length || orig_url_parts[1]!=new_url_parts[1]){
+                        type = 'hash_change';
+                    }
+                }
+            }
         }
-        if(tab.url){
+
+        for(var i=0; i<_tab_change_callbacks.length; i++){
+            var types = _tab_change_callbacks[i][1];
+            if(!types || types.indexOf(type)!==-1){
+                _tab_change_callbacks[i][0](tab, type);
+            }
+        }
+
+        if(!closing){
+            var matched_ids = [];
             for(var i=0; i<_url_matches.length; i++){
-                if(!_url_matches[i].match.test( tab.url )) continue;
-                //load CSS first
+                if(typeof(_url_matches[i].match)=='function'){
+                    if(!_url_matches[i].match(tab)) continue;
+                }else {
+                    if (!_url_matches[i].match.test(tab.url)) continue;
+                }
+                if(matched_ids.indexOf(_url_matches[i].match_id)!==-1) continue;
+                matched_ids.push(_url_matches[i].match_id);
+                //load CSS first then JS
                 _load_content_stylesheets_in_tab( _url_matches[i].stylesheets, tab.id );
                 _load_content_scripts_in_tab( _url_matches[i].scripts, tab, _url_matches[i].cb );
             }
@@ -75,15 +113,22 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
 
     //listen for new tabs and fire appropraite url match listeners/sctions
     chrome.tabs.onUpdated.addListener(function(tab_id, info, tab) {
-        if(info.status == 'complete'){ //new tab loaded
-            _tab_changed(tab);
+        if(info.status == 'complete' && tab.url){ //new tab loaded
+            _tab_changed(tab, false);
+            if(tab.url) _tab_state[tab_id] = tab.url;
         }
     });
-
+    //listen for tabs closing
+    chrome.tabs.onRemoved.addListener(function(tab_id, info){
+        _tab_changed(tab_id, true);
+    })
 
     return {
-        registerContentResourcesForUrlPattern: _register_content_resources_for_url_pattern,
+        registerContentResourcesForTabUrls: _register_content_resources_for_tab_urls,
         loadContentScriptsInTab: _load_content_scripts_in_tab,
-        addTabChangedCallback: function(cb){ _tab_load_callbacks.push(cb); }
+        addTabChangedCallback: function (cb, types) {
+            if (types && typeof(types) != 'object') types = [types];
+            _tab_change_callbacks.push([cb, types]);
+        }
     }
 })();
