@@ -66,22 +66,23 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
         //determine the type of tab change (load, reload, hash_change, close)
         //NOTE - if closing==true, then tab is just tab.id NOT the whole tab object
         var tab_id = closing ? tab : tab.id;
-        var type = 'load';
+        var change_type = 'load';
+
         if(closing){
-            type = 'close';
+            change_type = 'close';
             delete _tab_state[tab_id];
         }else if(!closing && !(tab_id in _tab_state)){
-            type = 'load';
+            change_type = 'load';
         }else if(tab_id in _tab_state){
-            if(tab_id == _tab_state[tab_id]){
-                type = 'reload';
+            if(tab.url == _tab_state[tab_id]){
+                change_type = 'reload';
             }else{
                  var orig_url_parts = _tab_state[tab_id].split("#"),
                     new_url_parts = tab.url.split("#");
                 if(orig_url_parts[0]==new_url_parts[0]){
                     //same base url
                     if(orig_url_parts.length != new_url_parts.length || orig_url_parts[1]!=new_url_parts[1]){
-                        type = 'hash_change';
+                        change_type = 'hash_change';
                     }
                 }
             }
@@ -89,8 +90,8 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
 
         for(var i=0; i<_tab_change_callbacks.length; i++){
             var types = _tab_change_callbacks[i][1];
-            if(!types || types.indexOf(type)!==-1){
-                _tab_change_callbacks[i][0](tab, type);
+            if(!types || types.indexOf(change_type)!==-1){
+                _tab_change_callbacks[i][0](tab, change_type);
             }
         }
 
