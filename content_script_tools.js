@@ -31,8 +31,9 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
     }
 
     //load a content script(s) into the specified tab_id and run a callback when all scripts are present/loaded
-    function _load_content_scripts_in_tab( content_scripts, tab, cb, run_at_doc_start ){
+    function _load_content_scripts_in_tab( content_scripts, tab, cb, run_at_doc_start, all_frames ){
         if(!content_scripts) return;
+
         if(typeof(content_scripts) != 'object') content_scripts = [content_scripts];
 
         var _needed_scripts = content_scripts.length;
@@ -44,7 +45,8 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
         for(var i=0; i<content_scripts.length; i++){
             chrome.tabs.executeScript( tab.id, {
                 file: content_scripts[i],
-                runAt: run_at_doc_start ? 'document_start' : 'document_end'
+                runAt: run_at_doc_start ? 'document_start' : 'document_end',
+                allFrames: all_frames ? true : false
             }, _script_loaded );
         }
     }
