@@ -8,7 +8,8 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
 
     //setup a list of scripts/stylesheets that should be loaded when a tab is opened/loaded @ a matching URL pattern
     //NOTE matches can be a string, regex, function that returns true/false (w/ tab passed in) or array of strings/regexes/functions
-    function _register_content_resources_for_tab_urls( matches, scripts, stylesheets, cb ){
+    //NOTE namespace can also be included to group a set of matches for later unregistrations or logging
+    function _register_content_resources_for_tab_urls( matches, scripts, stylesheets, cb, namespace ){
         var match_id = (new Date().getTime())+':'+(Math.floor(Math.random()*(999999-100000+1)+10000)); //id for match pattern group to prevent multiple loading for multi-matches
         if(typeof(matches) !== 'object') matches = [matches];
         function escapeRegExp(string){
@@ -25,8 +26,18 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
                 stylesheets: stylesheets,
                 cb: cb,
                 match: match,
-                match_id: match_id
+                match_id: match_id,
+                namespace: namespace
             });
+        }
+    }
+
+    //unregister a group of namespaced match sets
+    function _unregister_content_resources_by_namespace( namespace ){
+        for(var i=_url_matches.length-1; i>=0; i--){
+            if( _url_matches[i].namespace && _url_matches[i].namespace===namespace ){
+                _url_matches.splice(i, 1);
+            }
         }
     }
 
@@ -128,6 +139,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
 
     return {
         registerContentResourcesForTabUrls: _register_content_resources_for_tab_urls,
+        unregisterContentResourcesByNamespace: _unregister_content_resources_by_namespace,
         loadContentScriptsInTab: _load_content_scripts_in_tab,
         addTabChangedCallback: function (cb, types) {
             if (types && typeof(types) != 'object') types = [types];
