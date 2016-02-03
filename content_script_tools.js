@@ -51,7 +51,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
 
         function _script_loaded(){
             _needed_scripts--;
-            if(_needed_scripts==0 && typeof(cb)=='function') cb( tab ); //all scrips are loaded
+            if(_needed_scripts==0 && typeof cb =='function') cb( tab ); //all scrips are loaded
         }
         for(var i=0; i<content_scripts.length; i++){
             chrome.tabs.executeScript( tab.id, {
@@ -72,6 +72,17 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
                 runAt: 'document_start'
             });
         }
+    }
+
+    //load all exisitng matches that are active currently (potentially specified by namespace)
+    //NOTE - this funciton is intended to be run after adding listeners that haven't YET been called on existing open tabs
+    function _execute_existing_tab_load_matches( namespace ){
+        chrome.tabs.query(function(tabs){
+            tabs.forEach(function(tab){
+                if(!tab.url) continue;
+                 _execute_content_script_matching_loads_on_tab( tab, namespace );
+            })
+        })
     }
 
     //function called any time a tab is fundamentally changed (URL changed, new tab, reloaded)
@@ -109,20 +120,27 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
         }
 
         if(!closing){
-            var matched_ids = [];
-            for(var i=0; i<_url_matches.length; i++){
-                if(typeof(_url_matches[i].match)=='function'){
-                    if(!_url_matches[i].match(tab)) continue;
-                }else {
-                    if (!_url_matches[i].match.test(tab.url)) continue;
-                }
-                if(matched_ids.indexOf(_url_matches[i].match_id)!==-1) continue;
-                matched_ids.push(_url_matches[i].match_id);
-                //load CSS first then JS
-                _load_content_stylesheets_in_tab( _url_matches[i].stylesheets, tab.id );
-                _load_content_scripts_in_tab( _url_matches[i].scripts, tab, _url_matches[i].cb );
-            }
+            _execute_content_script_matching_loads_on_tab( tab );
         }
+    }
+
+    function _execute_content_script_matching_loads_on_tab( tab, namespace ){
+        var matched_ids = [];
+        _url_matches.forEach(function(rule){
+
+            if(namespace && rule.namespace != namespace) return;
+
+            if(typeof(rule.match)=='function'){
+                if(!rule.match(tab)) continue;
+            }else {
+                if (!rule.match.test(tab.url)) continue;
+            }
+            if(matched_ids.indexOf(rule.match_id)!==-1) continue;
+            matched_ids.push(rule.match_id);
+            //load CSS first then JS
+            _load_content_stylesheets_in_tab( rule.stylesheets, tab.id );
+            _load_content_scripts_in_tab( rule.scripts, tab, rule.cb );
+        });
     }
 
     //listen for new tabs and fire appropraite url match listeners/sctions
@@ -135,15 +153,16 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
     //listen for tabs closing
     chrome.tabs.onRemoved.addListener(function(tab_id, info){
         _tab_changed(tab_id, true);
-    })
+    });
 
     return {
         registerContentResourcesForTabUrls: _register_content_resources_for_tab_urls,
         unregisterContentResourcesByNamespace: _unregister_content_resources_by_namespace,
+        executeExitingTabLoadMatches: _execute_existing_tab_load_matches,
         loadContentScriptsInTab: _load_content_scripts_in_tab,
         addTabChangedCallback: function (cb, types) {
             if (types && typeof(types) != 'object') types = [types];
             _tab_change_callbacks.push([cb, types]);
         }
-    }
+    };
 })();
