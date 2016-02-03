@@ -77,7 +77,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
     //load all exisitng matches that are active currently (potentially specified by namespace)
     //NOTE - this funciton is intended to be run after adding listeners that haven't YET been called on existing open tabs
     function _execute_existing_tab_load_matches( namespace ){
-        chrome.tabs.query(function(tabs){
+        chrome.tabs.query( {}, function(tabs){
             tabs.forEach(function(tab){
                 if(!tab.url) return;
                  _execute_content_script_matching_loads_on_tab( tab, namespace );
