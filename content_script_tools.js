@@ -79,7 +79,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
     function _execute_existing_tab_load_matches( namespace ){
         chrome.tabs.query(function(tabs){
             tabs.forEach(function(tab){
-                if(!tab.url) continue;
+                if(!tab.url) return;
                  _execute_content_script_matching_loads_on_tab( tab, namespace );
             })
         })
