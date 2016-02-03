@@ -131,11 +131,11 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
             if(namespace && rule.namespace != namespace) return;
 
             if(typeof(rule.match)=='function'){
-                if(!rule.match(tab)) continue;
+                if(!rule.match(tab)) return;
             }else {
-                if (!rule.match.test(tab.url)) continue;
+                if (!rule.match.test(tab.url)) return;
             }
-            if(matched_ids.indexOf(rule.match_id)!==-1) continue;
+            if(matched_ids.indexOf(rule.match_id)!==-1) return;
             matched_ids.push(rule.match_id);
             //load CSS first then JS
             _load_content_stylesheets_in_tab( rule.stylesheets, tab.id );
