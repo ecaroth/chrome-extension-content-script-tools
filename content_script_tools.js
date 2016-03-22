@@ -160,6 +160,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
         unregisterContentResourcesByNamespace: _unregister_content_resources_by_namespace,
         executeExitingTabLoadMatches: _execute_existing_tab_load_matches,
         loadContentScriptsInTab: _load_content_scripts_in_tab,
+        loadContentStylesheetsInTab: _load_content_stylesheets_in_tab,
         addTabChangedCallback: function (cb, types) {
             if (types && typeof(types) != 'object') types = [types];
             _tab_change_callbacks.push([cb, types]);
