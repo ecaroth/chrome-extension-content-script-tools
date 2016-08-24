@@ -1,4 +1,5 @@
 "use strict";
+/* globals chrome */
 
 window.CONTENT_SCRIPT_TOOLS = (function(){
 
@@ -45,16 +46,19 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
     function _load_content_scripts_in_tab( content_scripts, tab, cb, run_at_doc_start, all_frames ){
         if(!content_scripts) return;
 
-        if(typeof(content_scripts) != 'object') content_scripts = [content_scripts];
+        //coerce tab to tabId
+        if(typeof type === 'object') tab = tab.id;
+
+        if(typeof(content_scripts) !== 'object') content_scripts = [content_scripts];
 
         var _needed_scripts = content_scripts.length;
 
         function _script_loaded(){
             _needed_scripts--;
-            if(_needed_scripts==0 && typeof cb =='function') cb( tab ); //all scrips are loaded
+            if(_needed_scripts === 0 && typeof cb === 'function') cb( tab ); //all scrips are loaded
         }
         for(var i=0; i<content_scripts.length; i++){
-            chrome.tabs.executeScript( tab.id, {
+            chrome.tabs.executeScript( tab, {
                 file: content_scripts[i],
                 runAt: run_at_doc_start ? 'document_start' : 'document_end',
                 allFrames: all_frames ? true : false
@@ -65,9 +69,12 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
     //load a stylesheet in the content tab
     function _load_content_stylesheets_in_tab( stylesheets, tab_id ){
         if(!stylesheets) return;
+        //coerce tab to tabId
+        if(typeof type === 'object') tab = tab.id;
+
         if(typeof(stylesheets) != 'object') stylesheets = [stylesheets];
         for(var i=0; i<stylesheets.length; i++){
-            chrome.tabs.insertCSS( tab_id, {
+            chrome.tabs.insertCSS( tab, {
                 file: stylesheets[i],
                 runAt: 'document_start'
             });
@@ -81,8 +88,8 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
             tabs.forEach(function(tab){
                 if(!tab.url) return;
                  _execute_content_script_matching_loads_on_tab( tab, namespace );
-            })
-        })
+            });
+        });
     }
 
     //function called any time a tab is fundamentally changed (URL changed, new tab, reloaded)
@@ -151,7 +158,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
         }
     });
     //listen for tabs closing
-    chrome.tabs.onRemoved.addListener(function(tab_id, info){
+    chrome.tabs.onRemoved.addListener(function(tab_id){
         _tab_changed(tab_id, true);
     });
 
