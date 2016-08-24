@@ -21,7 +21,7 @@ This function allows you to bind a listener to change events on all tabs in the 
 
 `types` (string or array of strings) specific change events you wish to bind the listener to. Options include "_load_", "_close_", "_reload_", and "_hash_change_"
 
-`callback` (function) callback function for when bound events occur, which takes 2 paremeters: _tab_ and _change_type_. _change_type_ is one of types above, and tab is a reference to the Chrome (TODO ADD URL LINK) tab. _PLEASE NOTE_ that when change_type is 'close', tab is an integer of the tab id that was closed (tab.tabId) rather than the full tab, as obviously the tab no longer exists.
+`callback` (function) callback function for when bound events occur, which takes 2 paremeters: _tab_ and _change_type_. _change_type_ is one of types above, and tab is a reference to the Chrome [tab](https://developer.chrome.com/extensions/tabs#type-Tab). _PLEASE NOTE_ that when change_type is 'close', tab is an integer of the tab id that was closed (tab.tabId) rather than the full tab, as obviously the tab no longer exists.
 
 
 ####.registerContentResourcesForTabUrls( matches, scripts, stylesheets, callback, namespace )
@@ -49,21 +49,21 @@ Execute contente resource watchers bound with _registerContentResourcesForTabUrl
 
 
 ####.loadContentScriptsInTab( scripts, tab_or_id, callback, run_at_doc_start, all_frames )
-This function allows you to load multiple scrips in an existing tab with various options. Under the hood it leverages `chrome.tabs.executeScript` (TODO LINK) but provides advanced functionality including callbacks.
+This function allows you to load multiple scrips in an existing tab with various options. Under the hood it leverages [chrome.tabs.executeScript](https://developer.chrome.com/extensions/tabs#method-executeScript) but provides advanced functionality including callbacks.
 
 `scripts` (string or array of strings) scripts you wish to load in the tab. _NOTE_ that these should be URLs relative to the extension root dir (and should all start with a leading slash). Also, array ordering is respected when the scripts are loaded on the page.
 
-`tab_or_id` (Tab or ID of tab TODO LINK) chrome tab you want to load the scripts in
+`tab_or_id` (Tab or ID of [tab](https://developer.chrome.com/extensions/tabs#type-Tab)) chrome tab you want to load the scripts in
 
 `callback` (function) callback you wish to call when loading of all scripts is complete. It takes a single parameter _tab_, which is a refernce to the chrome tab you passed in to load the scripts on
 
-`run_at_doc_start` (boolean, default false) should the scrips be loaded at _document_start_? If false, they are loaded at _document_end_. See the Chrome extension docs for more info TODO LINK
+`run_at_doc_start` (boolean, default false) should the scrips be loaded at _document_start_? If false, they are loaded at _document_end_. See the [Chrome extension docs](https://developer.chrome.com/extensions/tabs#property-details-runAt) for more info on this
 
-`all_frames` (boolean, default false) should the content scripts be loaded into all frames of the tab (including iframes). See the Chrome etension docs for more info TODO LINK
+`all_frames` (boolean, default false) should the content scripts be loaded into all frames of the tab (including iframes). See the [Chrome etension docs](https://developer.chrome.com/extensions/tabs#property-details-allFrames) for more info on this
 
 ####.loadContentStylesheetsInTab( stylesheets, tab_or_id )
 This function loads stylesheet(s) into a specified tab.
 
 `stylesheets` (string or array of strings) stylesheets you wish to load in the tab. _NOTE_ that these should be URLs relative to the extension root dir (and should all start with a leading slash). Also, array ordering is respected when the stylesheets are loaded on the page.
 
-`tab_or_id` (Tab or ID of tab TODO LINK) chrome tab you want to load the stylesheets in
+`tab_or_id` (Tab or ID of [tab](https://developer.chrome.com/extensions/tabs#type-Tab)) chrome tab you want to load the stylesheets in
