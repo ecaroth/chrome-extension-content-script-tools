@@ -67,7 +67,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
     }
 
     //load a stylesheet in the content tab
-    function _load_content_stylesheets_in_tab( stylesheets, tab_id ){
+    function _load_content_stylesheets_in_tab( stylesheets, tab ){
         if(!stylesheets) return;
         //coerce tab to tabId
         if(typeof type === 'object') tab = tab.id;
