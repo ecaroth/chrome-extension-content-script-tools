@@ -53,10 +53,17 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
 
         var _needed_scripts = content_scripts.length;
 
+
         function _script_loaded(){
             _needed_scripts--;
-            if(_needed_scripts === 0 && typeof cb === 'function') cb( tab ); //all scrips are loaded
+            if(_needed_scripts === 0 && typeof cb === 'function'){
+                //all scrips are loaded
+                chrome.tabs.get( tab, function( cb_tab ){
+                    cb( cb_tab );
+                });
+            }
         }
+
         for(var i=0; i<content_scripts.length; i++){
             chrome.tabs.executeScript( tab, {
                 file: content_scripts[i],
