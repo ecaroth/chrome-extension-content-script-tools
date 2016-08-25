@@ -47,7 +47,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
         if(!content_scripts) return;
 
         //coerce tab to tabId
-        if(typeof type === 'object') tab = tab.id;
+        if(typeof tab === 'object') tab = tab.id;
 
         if(typeof(content_scripts) !== 'object') content_scripts = [content_scripts];
 
@@ -70,7 +70,7 @@ window.CONTENT_SCRIPT_TOOLS = (function(){
     function _load_content_stylesheets_in_tab( stylesheets, tab ){
         if(!stylesheets) return;
         //coerce tab to tabId
-        if(typeof type === 'object') tab = tab.id;
+        if(typeof tab === 'object') tab = tab.id;
 
         if(typeof(stylesheets) != 'object') stylesheets = [stylesheets];
         for(var i=0; i<stylesheets.length; i++){
