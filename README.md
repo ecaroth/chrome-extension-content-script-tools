@@ -1,4 +1,4 @@
-#Chrome Extension Content Script Tools
+# Chrome Extension Content Script Tools
 
 The Chrome Extension APIs for interacting with tabs are great, but fall short on providing advanced tracking of tab state, change, and convenient event binding/listeners. Additionally, working with content scripts in a dynamic manner is possible but not as easy or convenient as would be ideal.
 
@@ -16,7 +16,7 @@ Internally, the script keeps a reference of the full set of tabs open in the bro
 API
 ------
 
-###.addTabChangedCallback( types, callback )
+### .addTabChangedCallback( types, callback )
 > This function allows you to bind a listener to change events on all tabs in the browser, including specificity for the change types you wish to listen for
 
 > `types` _(string or array of strings)_ specific change events you wish to bind the listener to. Options include "_load_", "_close_", "_reload_", and "_hash_change_"
@@ -31,7 +31,7 @@ API
 > ```
 
 
-###.registerContentResourcesForTabUrls( matches, scripts, stylesheets, callback, namespace )
+### .registerContentResourcesForTabUrls( matches, scripts, stylesheets, callback, namespace )
 > This function allows you to setup advanced rules for loading resources (scripts & stylesheets) on a tab page, including callback functionality and namespace binding. You setup a group of resources and a set of matches for when those resources should be included on the page, with a callback function that's called when all resources are loaded.
 
 > `matches` _(string, regex, function, or array of these) match conditions for determining if the resources should be loaded on the page. These can include simple strings that are matched to see if they are present in the tab URL, regexes that can match agains the tab URL, or functions that take a single parameter (tab) and return a boolean to determine if they resources should be loaded. You can mix/match these as needed for your use case. _NOTE_ that if an array of matches is provided, only 1 needs to return `true` for the content resources to be loaded.
@@ -69,7 +69,7 @@ API
 > );
 >```
 
-###.unregisterContentResourcesByNamespace( namespace )
+### .unregisterContentResourcesByNamespace( namespace )
 > Unbind existing listeners bound with _registerContentResourcesForTabUrls_
 
 > `namespace` _(string)_ namespace for listeners that wish to unbind
@@ -79,7 +79,7 @@ API
 > CONTENT_SCRIPT_TOOLS.unregisterContentResourcesByNamespace( "https_actions" );
 > ```
 
-###.executeExitingTabLoadMatches( namespace )
+### .executeExitingTabLoadMatches( namespace )
 > Execute contente resource watchers bound with _registerContentResourcesForTabUrls_ on existing tabs. This is needed because matches for the listeners are only evaluated on tab load/reload, so if you want your extensions functionality to work on existing pages right at install time you need to bind the watchers you want, then call this function.
 
 > `namespace` _(string, optional)_ namespace of specific watchers you want to match 
@@ -92,7 +92,7 @@ API
 > CONTENT_SCRIPT_TOOLS.executeExitingTabLoadMatches();
 > ```
 
-###.loadContentScriptsInTab( scripts, tab_or_id, callback, run_at_doc_start, all_frames )
+### .loadContentScriptsInTab( scripts, tab_or_id, callback, run_at_doc_start, all_frames )
 > This function allows you to load multiple scrips in an existing tab with various options. Under the hood it leverages [chrome.tabs.executeScript](https://developer.chrome.com/extensions/tabs#method-executeScript) but provides advanced functionality including callbacks.
 
 > `scripts` _(string or array of strings)_ scripts you wish to load in the tab. _NOTE_ that these should be URLs relative to the extension root dir (and should all start with a leading slash). Also, array ordering is respected when the scripts are loaded on the page.
@@ -127,7 +127,7 @@ API
 > );
 > ```
 
-###.loadContentStylesheetsInTab( stylesheets, tab_or_id )
+### .loadContentStylesheetsInTab( stylesheets, tab_or_id )
 > This function loads stylesheet(s) into a specified tab.
 
 > `stylesheets` _(string or array of strings)_ stylesheets you wish to load in the tab. _NOTE_ that these should be URLs relative to the extension root dir (and should all start with a leading slash). Also, array ordering is respected when the stylesheets are loaded on the page.
